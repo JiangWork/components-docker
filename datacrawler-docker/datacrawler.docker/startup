@@ -1,0 +1,23 @@
+#!/bin/sh
+
+LOG4J_LOCATION="./log4j.properties"
+TOMCAT_HOME=apache-tomcat-7.0.82
+
+if [ $# -lt 1 ];
+then
+    echo "Usage: $0 host_label [redis_hosts]" && exit 1
+fi
+
+export HOST_LABEL="$1"
+if [ $# -gt 1 ];
+then
+    shift
+    export REDIS_HOSTS="$@"
+fi
+export JAVA_OPTS="-Dlog4j.configuration=$LOG4J_LOCATION -Dapp.home=$APP_HOME -Dhost.label=$HOST_LABEL -Dredis.hosts=$REDIS_HOSTS -Djava.security.egd=file:/dev/./urandom -Xmx8000M -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:data/logs/supportbot.gc -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=64M"
+
+if [ ! -d $APP_HOME/data/logs ]; then
+    mkdir -p $APP_HOME/data/logs
+fi 
+# start
+/bin/sh $TOMCAT_HOME/bin/catalina.sh run 2>&1 | tee -a  $APP_HOME/data/logs/catalina.out
